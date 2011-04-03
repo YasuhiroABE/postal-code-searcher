@@ -1,0 +1,113 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: postal 1.6.0\n"
+"POT-Creation-Date: 2011-03-27 05:25-0700\n"
+"PO-Revision-Date: 2011-03-22 23:34+0900\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: templates/search.erb:29
+msgid "Postal Code Search"
+msgstr ""
+
+#: templates/search.erb:34
+msgid "Input Search String"
+msgstr ""
+
+#: templates/search.erb:34
+msgid "Reset all fields"
+msgstr ""
+
+#: templates/search.erb:36
+msgid "Postal Code (seven digits)"
+msgstr ""
+
+#: templates/search.erb:41
+msgid "Old Postal Code (five digits)"
+msgstr ""
+
+#: templates/search.erb:44
+msgid "Rows on each page"
+msgstr ""
+
+#: templates/search.erb:49
+msgid "Kanji/Katakana Search"
+msgstr ""
+
+#: templates/search.erb:50
+msgid "Pref. name"
+msgstr ""
+
+#: templates/search.erb:55
+msgid "City name"
+msgstr ""
+
+#: templates/search.erb:59
+msgid "Street name"
+msgstr ""
+
+#: templates/search.erb:64
+msgid "Search"
+msgstr ""
+
+#: templates/search.erb:72
+msgid "Search Results"
+msgstr ""
+
+#: templates/search.erb:72
+msgid "Page Number"
+msgstr ""
+
+#: templates/search.erb:72
+msgid "Download by JSON"
+msgstr ""
+
+#: templates/search.erb:72
+msgid "Download results by JSON format"
+msgstr ""
+
+#: templates/search.erb:74 templates/search.erb:107
+msgid "No."
+msgstr ""
+
+#: templates/search.erb:75
+msgid "Postal Code"
+msgstr ""
+
+#: templates/search.erb:76
+msgid "Pref."
+msgstr ""
+
+#: templates/search.erb:77
+msgid "City"
+msgstr ""
+
+#: templates/search.erb:78
+msgid "Street"
+msgstr ""
+
+#: templates/search.erb:79
+msgid "Others"
+msgstr ""
+
+#: templates/search.erb:102
+msgid "Total Results"
+msgstr ""
+
+#: templates/search.erb:126
+msgid "Response Time"
+msgstr ""
+
+#: templates/search.erb:126
+msgid "sec"
+msgstr ""

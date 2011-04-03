@@ -1,0 +1,66 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..", "lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :indent => "  ",
+    :debug => false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} [-i indent_text] [-f file] [-d] [-h]
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set an input filename or '-' (default: '-').") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-i', '--i indent_string', 'Set the indent string (default: ' + ret[:indent] + ')') { |i|
+      ret[:indent] = i
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+##########
+## main ##
+##########
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    puts(YALTools::JsonFormatter::parse(json, 0, @opts[:indent]))
+  end
+rescue
+  msg = {"error" => "undefined", "reason" => $!}
+  $stderr.puts msg.to_json
+  $stderr.puts $! if @opts[:debug]
+  exit(1)
+end
+

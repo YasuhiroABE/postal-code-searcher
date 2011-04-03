@@ -1,0 +1,13 @@
+#!/bin/bash
+
+dbname="$1"
+designname="$2"
+if test -z "${dbname}" -o -z "${designname}" ; then
+  echo "Usage: $0 dbname designname"
+  exit 1
+fi
+
+BASEDIR="$(dirname $0)"
+echo | "${BASEDIR}"/../postdoc "/${dbname}/_compact/${designname}"
+
+exit 0

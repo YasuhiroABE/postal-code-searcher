@@ -1,0 +1,81 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#
+if $0 == __FILE__
+  @basedir = File.dirname($0)
+  $:.unshift File.join([@basedir, "..", "..", "lib"])
+  require 'yalt'
+
+  require 'socket'
+  require 'optparse'
+  def option_parser
+    ret = {
+      :url => "",
+      :couch_label=>"",
+      :couch_conf=>"",
+      :debug=>false,
+    }
+    OptionParser.new do |opts|
+      opts.banner = <<-EOF
+  Usage: #{File::basename($0)} url [-d] [-h]
+
+#{File::basename($0)} is a tool to send the GET request with the url.
+It is designed for test purpose only.
+
+  Example: #{File::basename($0)} 'http://admin:xxxx@localhost:5984/_all_dbs'
+EOF
+      opts.separator ''
+      opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+        ret[:debug] = g
+      }
+      opts.on_tail('-h', '--help', 'Show this message') {
+        $stderr.puts opts
+        exit(1)
+      }
+      begin
+        opts.parse!(ARGV)
+        ret[:url] = ARGV[0] if ARGV.length == 1
+      rescue
+        $stderr.puts opts
+        $stderr.puts
+        $stderr.puts "[error] #{$!}"
+        exit(1)
+      end
+      if ret[:url] == ""
+        $stderr.puts opts
+        exit(1)
+      end
+    end
+    ret
+  end
+
+  require 'uri'
+  def parse_url(url)
+    ret = Hash.new
+    begin
+      u = URI.parse(url)
+      ret["host"] = u.host
+      ret["port"] = u.port
+      ret["path"] = u.path
+      ret["path"] += "?" + u.query if u.query != nil
+      ret["user"] = u.userinfo.split(':',2)[0] if u.methods.index('userinfo') != nil
+      ret["password"] = u.userinfo.split(':',2)[1] if u.methods.index('userinfo') != nil
+    rescue
+      $stderr.puts $!
+    end
+    return ret
+  end
+
+  @opts = option_parser
+  
+  ## parse url
+  opts = parse_url(@opts[:url])
+  
+  ## never use YALTools::Auth
+  
+  @couch = YALTools::Main.new(Couch::Server.new(opts["host"], opts["port"], opts))
+  @couch.debug = @opts[:debug]
+  
+  json = @couch.get(opts["path"])
+  puts json.to_json
+end

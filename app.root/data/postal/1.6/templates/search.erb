@@ -1,0 +1,110 @@
+  <!-- main body erb file -->
+  <% 
+     input_pref = @query['pref_kana'].empty? ? @query['pref'] : @query['pref_kana']
+     input_city = @query['city_kana'].empty? ? @query['city'] : @query['city_kana']
+     input_street = @query['street_kana'].empty? ? @query['street'] : @query['street_kana']
+     %>
+      <div class="prepend-top span-24 last">
+	<h1><%= _("Postal Code Search") %></h1>
+      </div>
+      <div class="span-24 last filter-table">
+	<form action="<%= @env['SCRIPT_NAME'] %>" method="get">
+	  <table>
+	    <caption><%= _("Input Search String") %> <a class="right" href="<%= @env['SCRIPT_NAME'] %>"><span class="small"><%= _("Reset all fields") %></span></a></caption>
+	    <tr>
+	      <td colspan="3"><%= _("Postal Code (seven digits)") %>
+		<input type="text" name="code_prefix" value="<%= @query['code_prefix'] %>" size="3"/> − 
+		<input type="text" name="code_suffix" value="<%= @query['code_suffix'] %>" size="4"/>
+		<input type="hidden" name="page" value="<%= @query["page"] %>" />
+	      </td>
+	      <td colspan="1"><%= _("Old Postal Code (five digits)") %>
+		<input type="text" name="old_code_prefix" value="<%= @query['old_code_prefix'] %>" size="2" />
+	      </td>
+	      <td><%= _("Rows on each page") %>
+		<input type="text" name="unit" value="<%= @query["unit"] %>" size="1" />
+	      </td>
+	    </tr>
+	    <tr>
+	      <th><%= _("Kanji/Katakana Search") %></th>
+	      <td><%= _("Pref. name") %>
+		<input id="pref" type="text" name="pref" value="<%= input_pref %>" size="14"/>
+		<div id="pref_js"></div>
+	      </td>
+	      
+	      <td><%= _("City name") %>
+		<input id="city" type="text" name="city" value="<%= input_city %>" size="14"/>
+		<div id="city_js"></div>
+	      </td>
+	      <td><%= _("Street name") %>
+		<input id="street" type="text" name="street" value="<%= input_street %>" size="14"/>
+		<div id="street_js"></div>
+	      </td>
+	      <td>
+		<input type="submit" name="submit" value="<%= _("Search") %>" size="8" />
+	      </td>
+	    </tr>
+	</table></form>
+      </div>
+
+      <div class="span-24 last">
+	<table>
+	  <caption><%= _("Search Results") %> (<%= _("Page Number") %><%= @query["page"] %>) <span class="right"><a href="<%= json_query %>" title="<%= _("Download by JSON") %>"><%= _("Download results by JSON format") %></a></span></caption>
+	  <tr>
+	    <th><%= _("No.") %></th>
+	    <th><%= _("Postal Code") %></th>
+	    <th><%= _("Pref.") %></th>
+	    <th><%= _("City") %></th>
+	    <th><%= _("Street") %></th>
+	    <th><%= _("Others") %></th>
+	  </tr>
+	  <% rows, skip, page, max_page, max_rows = @view.page(@options, @query["page"], @query["unit"])
+	     number = @query["unit"].to_i * (page - 1) + 1
+	     
+	     rows.each do |doc| %>
+	  <tr>
+	    <td class="large center" rowspan="2"><%= number %></td>
+	    <td class="large center" rowspan="2"><%= doc["codep"] %> - <%= doc["codes"] %></td>
+	    <td class="small"><%= doc["pk"] %></td>
+	    <td class="small"><%= doc["ck"] %></td>
+	    <td class="small"><%= doc["sk"] %></td>
+	    <td class="small"><%= doc["op1"] %>,<%= doc["op2"] %>,<%= doc["op3"] %>,<%= doc["op4"] %>,<%= doc["op5"] %>,<%= doc["op6"] %></td>
+	  </tr>
+	  <tr>
+	    <td class="p_pref large"><%= doc["p"] %></td>
+	    <td class="p_city large"><%= doc["c"] %></td>
+	    <td class="p_street large"><%= doc["s"] %></td>
+	    <td></td>
+	  </tr>
+	  <% number += 1
+	     end %>
+	</table>
+	<p class="right"><%= _("Total Results") %>: <%= max_rows %>
+	</p>
+      </div>
+
+      <div class="span-1">
+	<p><%= _("No.") %></p>
+      </div>
+      <div class="span-22 append-1 last link-navi">
+	<ul>
+	  <% tmp_q = @query.clone
+	     max_page.times do |i| 
+             tmp_q["page"] = (i + 1).to_s
+             url = gen_uri(tmp_q)
+             start_num = i * @query["unit"].to_i + 1
+             end_num = (i + 1) * @query["unit"].to_i
+             end_num = max_rows if end_num > max_rows 
+          if (i + 1) != page   %>
+	  <li><a href="<%= url %>"><%= start_num %> - <%= end_num %></a></li>
+	  <%   else     %>
+	  <li><%= start_num %> - <%= end_num %></li>
+	  <%   end
+	       end %>
+	</ul>
+	<% resp_time = format("%.3f", Time.now.to_f - @stime) %>
+	<p class="right small"><%= _("Response Time") %>: <%= resp_time %> [<%= _("sec") %>]
+	</p>
+      </div>
+
+
+

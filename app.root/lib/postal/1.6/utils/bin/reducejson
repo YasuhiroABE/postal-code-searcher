@@ -1,0 +1,90 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File::dirname($0)
+$:.unshift File::join([@basedir,"..","..","lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :outfile => "-",
+    :exclude => false,
+    :keys => nil,
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} '[json_array]' [-f file] [-o outfile] [-e] [-d] [-h]
+
+#{File::basename($0)} is a tool to print selected key-value pairs of lines.
+'[json_array]' will be parsed by JSON.parse('[json_array]').
+
+  Example: 
+    $ cat a.json | #{File::basename($0)} '["_id","_rev"]'
+    {"_id":"0009b95b502e69672","_rev":"2-da6c42c8a7dfd0de46ef1d3d309928b8"}
+    {"_id":"0009d6d3b0e5d9863","_rev":"2-770eaf3a5c729c52574d7a7bc59ef6d6"}
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set input filename or '-' (default: '-').") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-' (default: '-').") { |f|
+      ret[:outfile] = f
+    }
+    opts.on('-e', '--exclude-mode', 'Argument, json_array, is used as the exclude list. (almost same as "grep -v")') { |r|
+      ret[:exclude] = r
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |d|
+      ret[:debug] = d
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:keys] = JSON.parse(ARGV[0]) if ARGV.length == 1
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+
+    if ret[:keys] == ""
+      $stderr.puts opts
+      exit(1)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+
+## parse labels
+require 'json'
+
+## let's start
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    ret = nil
+    
+    if @opts[:exclude]
+      ret = YALTools::ProcJson::exclude_value_from_json(json, @opts[:keys])
+    else
+      ret = YALTools::ProcJson::select_value_from_json(json, @opts[:keys])
+    end
+    save_data(ret.to_json, @opts[:outfile])
+  end
+ensure
+  $stderr.puts $! if @opts[:debug]
+  exit
+end
+

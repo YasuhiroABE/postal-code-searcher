@@ -1,0 +1,6 @@
+"_id","language","views","all","map","views","all","reduce"
+"_design/all","javascript",,,"function(doc) {
+  if (doc.doctype && doc.doctype == ""log"") {
+    emit(doc,null),
+  }
+}",,,"_count"

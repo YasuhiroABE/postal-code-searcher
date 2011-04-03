@@ -1,0 +1,82 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#
+#
+
+if $0 == __FILE__
+  @basedir = File.dirname($0)
+  $:.unshift File.join([@basedir, "..", "..", "lib"])
+  require 'yalt'
+  include YALTools::CmdLine
+
+  require 'optparse'
+  def option_parser
+    ret = {
+      :fancy_mode => false,
+      :couch_label => "",
+      :couch_conf => "",
+      :debug => false,
+    }
+    OptionParser.new do |opts|
+      opts.banner = <<-EOF
+  Usage: #{File::basename($0)} [-y yaml_conf_file] [-x yaml_label] [-d] [-h]
+
+#{File::basename($0)} is a tool to show all database name of the couchdb server which is specified by the '-x' option.
+EOF
+      opts.separator ''
+      opts.on('-j', '--fancy_output', "Enable the fancy output mode") { |t|
+        ret[:fancy_mode] = t
+      }
+      require 'socket'
+      opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+        ret[:couch_conf] = c
+      }
+      require 'socket'
+      opts.on('-x', '--yml_label label', "Set label name of the yaml conf (default: default.user)") { |l|
+        ret[:couch_label] = l
+      }
+      opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+        ret[:debug] = g
+      }
+      opts.on_tail('-h', '--help', 'Show this message') {
+        $stderr.puts opts
+        exit(1)
+      }
+      begin
+        opts.parse!(ARGV)
+      rescue
+        $stderr.puts opts
+        $stderr.puts
+        $stderr.puts "[error] #{$!}"
+        exit(1)
+      end
+      
+      if ret[:couch_label] == ""
+        ret[:couch_label] = get_default_yaml_label()
+      end
+      if ret[:couch_conf] == ""
+        ret[:couch_conf] = get_default_yaml_conf(@basedir)
+      end
+    end
+    ret
+  end
+
+
+  @opts = option_parser
+  msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+  
+  @couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+  
+  uri = "/_all_dbs"
+  
+  json = @couch.get(uri)
+  msg = {"database"=>[]}
+  json.sort.each do |db|
+    msg["database"] << db
+  end
+  if @opts[:fancy_mode]
+    puts msg.to_json.gsub(/,/, ",\n  ").gsub(/\[/,"[\n  ").gsub(/\]/,"\n]")
+  else
+    puts msg.to_json
+  end
+end

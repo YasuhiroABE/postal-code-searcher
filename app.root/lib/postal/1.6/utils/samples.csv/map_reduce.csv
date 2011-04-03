@@ -1,0 +1,10 @@
+"_id","language","views","all","map","views","all","reduce","views","name","map","views","name","reduce"
+"_design/all","javascript",,,"function(doc) {
+  if (doc.doctype && doc.doctype == ""log"") {
+    emit(doc,null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.doctype && doc.doctype == ""log"") {
+    emit(doc.name,null);
+  }
+}",,,"_count"

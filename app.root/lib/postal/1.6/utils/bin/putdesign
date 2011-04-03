@@ -1,0 +1,114 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..","lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :dbname => "",
+    :docname => "",
+    :merge => false,
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+  Usage: #{File::basename($0)} dbname docname [-f file] [-d] [-y] [-x]
+
+#{File::basename($0)} is a tool to transfer a input json stream to the couchdb server.
+The dbname and docname expands to the /dbname/_design/_docname.
+
+  Example: cat a.json | #{File::basename($0)} example test
+
+Put the document from stdin to "/example/_design/test" 
+
+  Example: ./lsdoc /example/_design/all | ./reducejson -e '["_id","_rev"]' | ./putdesign example2 test
+
+Copy the design document named "_design/all" to another database as "_design/test".
+EOF
+    opts.separator ''
+    opts.on('-m', '--merge', 'Merged given json with the existing design doc before processing') { |m|
+      ret[:merge] = m
+    }
+    opts.on('-f', '--file file', "Set an input filename or '-'.") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    require 'socket'
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file.") { |c|
+      ret[:couch_conf] = c
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+      ret[:couch_label] = l
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      if ARGV.length == 2
+        ret[:dbname] = ARGV.shift
+        ret[:docname] = ARGV.shift
+      end
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:dbname] == "" or ret[:docname] == ""
+      $stderr.puts opts
+      exit(1)
+    end
+    
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+
+## let's start
+begin
+  ## define uri
+  uri = format("/%s/_design/%s", @opts[:dbname], @opts[:docname])
+  
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    
+    if @opts[:merge]
+      j = @couch.get(uri)
+      require 'deep_merge'
+      json = j.deeper_merge(json)
+    else
+      j = @couch.get(uri)
+      json["_rev"] = j["_rev"] if j.has_key?("_rev")
+    end
+    $stderr.puts uri if @opts[:debug]
+    $stderr.puts json if @opts[:debug]
+    ret = @couch.put(uri, json)
+  end
+rescue
+  $stderr.puts $! if @opts[:debug]
+  exit
+end
+

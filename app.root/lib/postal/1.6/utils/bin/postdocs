@@ -1,0 +1,114 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..","lib"])
+require 'yalt'
+include YALTools::CmdLine  
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :dbname => "",
+    :unit => 15,
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug=>false,
+    :deep_debug => false
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} dbname [-f file] [-u num_of_unit] [-y yaml_file] [-x yaml_label] [-d] [-h]"
+
+#{File::basename($0)} is a tool to transfer a input json stream to the couchdb server via /bulk_docs.
+Each input line must have the complete JSON notation.
+
+This script outputs the failed document list.
+
+  Example: input prepared json stream into the "example" db.
+    $ cat a.json | #{File::basename($0)} -d example
+
+  Example: copy all documents of the "example" db into another db named "example2."
+    $ lsdocs example | #{File::basename($0)} example2
+EOF
+    opts.separator ''
+    opts.on('-f', '--file file', "Set an input filename or '-'.") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-u', '--unit num_of_unit', 'Set the num of processing unit (default: 15)') { |u|
+      ret[:unit] = u.to_i
+    }
+    require 'socket'
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+      ret[:couch_conf] = c
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+      ret[:couch_label] = l
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+      ret[:debug] = g
+    }
+    opts.on('--dd', 'Enable the debug mode of the Couch::Server instance') { |g|
+      ret[:deep_debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:dbname] = ARGV[0] if ARGV.length == 1
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:dbname] == ""
+      $stderr.puts opts
+      exit(1)
+    end
+
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:deep_debug])
+
+begin
+  failed_list = []
+  lines = YALTools::YaJsonRows.new(@couch, @opts[:dbname])
+  
+  load_line(@opts[:filename]) do |line|
+    lines << line
+    if lines.length == @opts[:unit]
+      failed_list += lines.update_all
+    end
+  end
+  if lines.size > 0
+    failed_list += lines.update_all
+  end
+  
+  failed_list.each do |i|
+     puts i.to_json
+  end
+  exit(0)
+rescue
+  msg = {"error" => "undefined", "reason" => "unknown"}
+  $stderr.puts msg.to_json
+  $stderr.puts $! if @opts[:debug]
+end
+

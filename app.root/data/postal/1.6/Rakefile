@@ -1,0 +1,15 @@
+
+$:.unshift "/app/lib/postal/1.6/lib"
+
+desc "Update pot/po files."
+task :updatepo do
+  require 'gettext/tools'
+  GetText.update_pofiles("postal", Dir.glob("templates/search.erb"), "postal 1.6.0")
+end
+
+desc "Create mo-files"
+task :makemo do
+  require 'gettext/tools'
+  # require 'gettext_rails/tools'  # For Ruby on Rails.
+  GetText.create_mofiles
+end

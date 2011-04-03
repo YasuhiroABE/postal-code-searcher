@@ -1,0 +1,160 @@
+/**
+ * 各ページで共通の設定部分
+ **/
+/**
+ ** 全体
+ **/
+body {
+    color: #000000;
+    background-color: #fff6e5;
+}
+/**
+ **
+ ** Navigator
+ **
+ **/
+div.navigator {
+    margin: 0px 0px 16px 0px;
+}
+div.navigator ul {
+    background-color: #f9d5e7; /* warn orange */
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+div.navigator li {
+    display: inline-block;
+    border: none;
+    width: 110px;
+    text-align: center;
+    background-color: #f9d5e7; /* warn orange */
+}
+div.navigator li a {
+    color: white;
+    text-decoration: none;
+}
+div.navigator li a[href^="http"] {
+    padding:2px 24px 2px 0;
+    margin:-2px 0;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-image: url("../css/blueprint/plugins/link-icons/icons/external.png")
+}
+div.navigator li.focus {
+    background-color: white;
+}
+div.navigator li.focus a {
+    color: black;
+    text-decoration: none;
+}
+div.navigator li.home {
+    float: left;
+}
+div.navigator li.blog {
+    float: right;
+}
+div.navigator li.old {
+    float: right;
+}
+div.navigator li.next {
+    float: right;
+}
+/**
+ **
+ ** Address
+ **
+ **/
+address {
+    float: right;
+    color: red;
+}
+/**
+ **
+ ** Logo
+ **
+ **/
+.logo a, .logo a:visited , .logo a:link , .logo a:hover , .logo a:active {
+  color: #000000;
+  text-decoration: none;
+}
+div.logo {
+}
+div.logo img {
+    width: 32px;
+    height: 32px;
+    margin-bottom: -4px;
+}
+div.logo p {
+    margin-bottom: 0px;
+}
+div.logo span.logo {
+    font-size: 24px;
+}
+/**
+ **
+ ** Search Box
+ **
+ **/
+div.searchbox form {
+    float: right;
+}
+
+/*
+ * ポートレット スタイル
+ */
+div.portlet {
+    margin: 8px 2px;
+    border-right:  1px dotted #191970; /* midnight blue */
+    border-bottom: 1px dotted #191970; /* midnight blue */
+}
+div.portlet ul, div.portlet p {
+    margin: 0.5em -2em 0.5em 2em;
+}
+div.portlet { 
+    background-repeat: repeat-y;
+    background-position: right center;
+    background-image: url("/css/portlet.grad.back.png");
+}
+div.portlet a[href^="http:"] {
+    padding:2px 16px 2px 0;
+    margin:-2px 0;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-image: url("/css/blueprint/plugins/link-icons/icons/external.png");
+}
+
+/**
+   見出し
+   **/
+h2,h3,h4 {
+    font-weight: bold;
+}
+h2 {
+    padding: 0.4em 0.5em 0.1em 0.5em;
+    border-left: 0.5em solid #191970; /* midnight blue */
+}
+h3 {
+    padding: 0.4em 0.5em 0.1em 0.5em;
+    border-left: 0.7em double #191970; /* midnight blue */
+}
+h4 {
+    padding: 0.1em 0.5em;
+    border-left: 0.2em dotted #191970;
+}
+
+
+pre {
+    overflow: auto;
+}
+
+div.console {
+    color: #ffffff;
+    background-color: #191970;
+}
+div.console pre {
+    margin: 1em 2em;
+}
+div.console pre kbd {
+    border-bottom: 0.3em dotted #ffffff;
+}

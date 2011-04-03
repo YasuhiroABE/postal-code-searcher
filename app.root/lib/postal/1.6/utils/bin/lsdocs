@@ -1,0 +1,146 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..", "lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :dbname => "",
+    :outfile => "-",
+    :descending => false,
+    :include_docs => true,
+    :max_numrows => false,
+    :attachments => false,
+    :page => 0,
+    :unit => 15,
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug => false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+  Usage: #{File::basename($0)} dbname [-p page] [-u unit] [-i] [-d] [-y] [-x]
+EOF
+    opts.separator ''
+    opts.on('-a', '--attachments', 'Add encodeded data of attachments [too slow]') { |i|
+      ret[:attachments] = i
+    }
+    opts.on('-i', '--show_index', 'Display ["id","key","value"] tags only') { |i|
+      ret[:include_docs] = ! i
+    }
+    opts.on('-u', '--unit num_of_unit', 'Set the num of processing unit (default: 15)') { |u|
+      ret[:unit] = u.to_i
+    }
+    opts.on('-p', '--page page', 'Set the num of pages (default: 1)') { |p|
+      ret[:page] = p.to_i
+    }
+    opts.on('-r', '--reverse', 'Enable reverse mode') { |r|
+      ret[:descending] = r
+    }
+    opts.on('-m', '--max_numrows', 'Enable max_numrows mode') { |m|
+      ret[:max_numrows] = m
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-'.") { |f|
+      ret[:outfile] = f
+    }
+    require 'socket'
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+      ret[:couch_conf] = c
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+      ret[:couch_label] = l
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') { |h|
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:dbname] = ARGV[0] if ARGV.length == 1
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:dbname] == ""
+      $stderr.puts opts
+      exit(1)
+    end
+
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+##########
+## main ##
+##########
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+
+opts = {}
+## basic options
+opts["limit"] = @opts[:unit]
+opts["include_docs"] = @opts[:include_docs]
+opts["descending"] = @opts[:descending]
+
+msg = {"opts"=>opts}
+$stderr.puts msg.to_json if @opts[:debug]
+
+view = YALTools::YaAllDocs.new(@couch, @opts[:dbname])
+view.debug = @opts[:debug]
+
+if @opts[:max_numrows]
+  msg = { "max_numrows" => view.max_numrows(opts) }
+  begin
+    YALTools::CmdLine::save_data(msg.to_json, @opts[:outfile], "w")
+  rescue
+    exit
+  end
+elsif @opts[:page] > 0
+  result_set, skip, page, max_page, max_rows = view.page(opts, @opts[:page], @opts[:unit])
+  msg = { "skip" => skip , "page" => page, "max_page" => max_page, "max_rows" => max_rows }
+  $stderr.puts msg.to_json if @opts[:debug]
+  begin
+    result_set.each do |i|
+      YALTools::CmdLine::save_data(i.to_json, @opts[:outfile], "w")
+    end
+  ensure
+    exit
+  end
+else
+  begin
+    case @opts[:attachments]
+    when true
+      view.each_with_attachments(opts, @opts[:page], @opts[:unit]) do |result_set, skip, page, max_page, max_rows|
+        result_set.each do |i|
+          YALTools::CmdLine::save_data(i.to_json, @opts[:outfile], "w")
+        end
+      end
+    else
+      view.each(opts, @opts[:page], @opts[:unit]) do |result_set, skip, page, max_page, max_rows|
+        result_set.each do |i|
+          YALTools::CmdLine::save_data(i.to_json, @opts[:outfile], "w")
+        end
+      end
+    end
+  ensure
+    exit
+  end
+end

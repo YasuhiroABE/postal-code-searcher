@@ -1,0 +1,101 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+
+if $0 == __FILE__
+  @basedir = File::dirname($0)
+  $:.unshift File::join([@basedir, "..", "..", "lib"])
+  require 'yalt'
+  include YALTools::CmdLine
+
+  require 'optparse'
+  def option_parser
+    ret = {
+      :dbname => "",
+      :couch_label=>"",
+      :couch_conf=>"",
+      :debug=>false,
+    }
+    OptionParser.new do |opts|
+      opts.banner = <<-EOF
+  Usage: #{File::basename($0)} dbname [-y yaml_file] [-x yaml_label] [-d] [-h]
+
+#{File::basename($0)} is a tool to delete a database from the couchdb.
+The '-f' option allow to delete a database without any notice.
+EOF
+      opts.separator ''
+      opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+        ret[:couch_conf] = c
+      }    
+      require 'socket'
+      opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+        ret[:couch_label] = l
+      }
+      opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+        ret[:debug] = g
+      }
+      opts.on_tail('-h', '--help', 'Show this message') {
+        $stderr.puts opts
+        exit
+      }
+      begin
+        opts.parse!(ARGV)
+        ret[:dbname] = ARGV[0] if ARGV.length == 1
+      rescue
+        $stderr.puts opts
+        $stderr.puts
+        $stderr.puts "[error] #{$!}"
+        exit
+      end
+      if ret[:dbname] == ""
+        $stderr.puts opts
+        exit
+      end
+
+      if ret[:couch_label] == ""
+        ret[:couch_label] = get_default_yaml_label()
+      end
+      if ret[:couch_conf] == ""
+        ret[:couch_conf] = get_default_yaml_conf(@basedir)
+      end
+    end
+    ret
+  end
+
+  @opts = option_parser
+  msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+  @couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+  
+  uri = format("/%s", @opts[:dbname])
+  
+  ## check the existing
+  check_ok = nil
+  begin
+    json = @couch.get(uri)
+    check_ok = true if not json.empty?
+  rescue
+    check_ok = false
+  end
+  
+  ## confirm the existence of the database
+  if not check_ok
+    msg = {"error" => "not exist", "reason" => "database, #{@opts[:dbname]}, not found"}
+    $stderr.puts msg.to_json
+    exit(1)
+  end
+  
+  ## ok, let's start
+  begin
+    res = @couch.delete(uri)
+  rescue
+    puts $! if @opts[:debug]
+  end
+  if res == nil
+    $stderr.puts "failed to update"
+  elsif res.kind_of?(Net::HTTPSuccess)
+    puts res.body
+  else
+    msg = {"error" => "undefined", "reason" => "unknown"}
+    $stderr.puts msg.to_json
+  end
+end

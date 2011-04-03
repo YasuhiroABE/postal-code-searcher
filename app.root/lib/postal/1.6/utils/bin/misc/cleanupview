@@ -1,0 +1,12 @@
+#!/bin/bash
+
+dbname="$1"
+if test -z "${dbname}" ; then
+  echo "Usage: $0 dbname"
+  exit 1
+fi
+
+BASEDIR="$(dirname $0)"
+echo | "${BASEDIR}"/../postdoc "/${dbname}/_view_cleanup"
+
+exit 0

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+BASEDIR="$(dirname $0)"
+if test "$1" = "-h" -o "$1" = "--help" ; then
+  echo "Usage: $0"
+  echo ""
+  echo "Example: $0 | ${BASEDIR}/../jsonfmt"
+  exit 1
+fi
+
+echo | "${BASEDIR}"/../lsdoc /_stats
+
+exit 0

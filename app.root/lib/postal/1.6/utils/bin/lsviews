@@ -1,0 +1,164 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..", "lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :dbname => "",
+    :designname => "",
+    :viewname => "",
+    :outfile => "-",
+    :key=>nil,
+    :startkey=>nil,
+    :endkey=>nil,
+    :descending=>false,
+    :max_numrows => false,
+    :reduce=> false,
+    :group => false,
+    :include_docs => true,
+    :page => 0,
+    :skip => 0,
+    :unit => 15,
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug => false,
+    :deep_debug => false
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+  Usage: #{File::basename($0)} dbname designname viewname [[-k] | [-s] [[-e]]] [-g] [-u unit] [-p page] [-m] [-i] [-d] [-y] [-x]
+
+The parameters will be expanded to;
+    "/dbname/_design/designname/_view/viewname?reduce=false".
+If enabled the '-g' option, the uri expands to;
+    "/dbname/_design/designname/_view/viewname?reduce=false&group=true".
+EOF
+    opts.separator ''
+    opts.on('-k', '--key key', 'Set the key') { |i|
+      ret[:key] = i
+    }
+    opts.on('-s', '--startkey key', 'Set the startkey') { |i|
+      ret[:startkey] = i
+    }
+    opts.on('-e', '--endkey key', 'Set the endkey') { |i|
+      ret[:endkey] = i
+    }
+    opts.on('-r', '--reverse', '') { |i|
+      ret[:descending] = i
+    }
+    opts.on('-g', '--group_true', 'Enable the group=true query option') { |i|
+      ret[:group] = i
+    }
+    opts.on('-i', '--index_mode', 'Display ["id","key","value"] tags only') { |i|
+      ret[:include_docs] = ! i
+    }
+    opts.on('-u', '--unit num_of_unit', 'Set the num of processing unit (default: 15)') { |i|
+      ret[:unit] = i.to_i
+    }
+    opts.on('-p', '--page page', 'Set the page number.') { |i|
+      ret[:page] = i.to_i
+    }
+    opts.on('-m', '--max_numdocs', 'Show only the total number of documents') { |i|
+      ret[:max_numrows] = i
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-'.") { |i|
+      ret[:outfile] = i
+    }
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |i|
+      ret[:couch_conf] = i
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |i|
+      ret[:couch_label] = i
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |i|
+      ret[:debug] = i
+    }
+    opts.on('--dd', 'Enable the debug mode of the Couch::Server instance') { |i|
+      ret[:deep_debug] = i
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+
+    begin
+      opts.parse!(ARGV)
+      ret[:dbname] = ARGV[0] if ARGV.length == 3
+      ret[:designname] = ARGV[1] if ARGV.length == 3
+      ret[:viewname] = ARGV[2] if ARGV.length == 3
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    
+    if ret[:dbname].empty? or ret[:designname].empty? or ret[:viewname].empty?
+      $stderr.puts opts
+      exit(1)
+    end
+    
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+##########
+## main ##
+##########
+@opts = option_parser
+
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:deep_debug])
+
+opts = {}
+## basic options
+opts["reduce"] = @opts[:reduce] ## always "false"
+opts["limit"] = @opts[:unit]
+opts["include_docs"] = @opts[:include_docs]
+## group options
+opts["group"] = @opts[:group]
+## search options
+opts["key"] = @opts[:key]
+opts["startkey"] = @opts[:startkey]
+opts["endkey"] = @opts[:endkey]
+opts["descending"] = @opts[:descending]
+
+msg = {"opts"=>opts}
+$stderr.puts msg.to_json if @opts[:debug]
+
+begin
+  view = YALTools::YaViewDocs.new(@couch, @opts[:dbname], @opts[:designname], @opts[:viewname])
+  view.debug = @opts[:debug]
+
+  if @opts[:max_numrows]
+    msg = { "max_numrows" => view.max_numrows(opts) }
+    YALTools::CmdLine::save_data(msg.to_json, @opts[:outfile], "w")
+  elsif @opts[:page] > 0
+    result_set, skip, page, max_page, max_rows = view.page(opts, @opts[:page], @opts[:unit])
+    msg = { "skip" => skip , "page" => page, "max_page" => max_page, "max_rows" => max_rows }
+    $stderr.puts msg.to_json if @opts[:debug]
+    result_set.each do |i|
+      YALTools::CmdLine::save_data(i.to_json, @opts[:outfile], "w")
+    end
+  else
+    view.each(opts, @opts[:page], @opts[:unit]) do |result_set, skip, page, max_page, max_rows|
+      result_set.each do |i|
+        YALTools::CmdLine::save_data(i.to_json, @opts[:outfile], "w")
+      end
+    end
+  end
+ensure
+  exit
+end

@@ -1,0 +1,2 @@
+"_id","name","roles","type","salt","password_sha"
+"org.couchdb.user:db.reader","db.reader","[""fwlog.reader""]","user","xxxxxx","49901d945ad6da0f0af47691f305daf994d9d2c9"

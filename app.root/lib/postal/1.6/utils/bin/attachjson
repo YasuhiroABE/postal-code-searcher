@@ -1,0 +1,93 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File::dirname($0)
+$:.unshift File::join([@basedir,"..","..","lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :outfile => "-",
+    :json_list => [],
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} '[content-type,filename,filepath]' ... [-f file] [-o outfile] [-d] [-h]
+
+  content-type: e.x. "text/plain"
+      filename: filename of attached text.
+      filepath: encoded by base64.
+
+  Example:
+    $ echo "" | #{File::basename($0)} '["text/plain","passwd.txt","/etc/passwd"]'
+    {"_attachments":{"passwd.txt":{"content_type":"text/plain","data":"encoded data of /etc/passwd"}}}
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set input filename or '-' (default: '-').") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-' (default: '-').") { |f|
+      ret[:outfile] = f
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode.') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ARGV.map do |i|
+        begin
+          ret[:json_list] << JSON.parse(i)
+        end
+      end
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    
+    if ARGV.length == 0
+      $stderr.puts opts
+      exit(1)
+    end
+  end
+  ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+## let's start
+
+require 'base64'
+
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    json["_attachments"] = {}
+
+    @opts[:json_list].each do |c,p,d|
+      json["_attachments"][p] = {}
+      json["_attachments"][p]["content_type"] = c
+      json["_attachments"][p]["data"] = Base64::encode64(open(d).read) if FileTest::exist?(d)
+    end
+
+    ## show results
+    save_data(json.to_json, @opts[:outfile])
+  end
+ensure
+  $stderr.puts $! if @opts[:debug]
+  exit
+end
+

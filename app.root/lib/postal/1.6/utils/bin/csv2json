@@ -1,0 +1,187 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+module YaCsv2Json
+  require 'optparse'
+  def option_parser
+    ret = {
+      :filename => "-",
+      :csv_sep => ",",
+      :normal_mode => false,
+      :title_json => "",
+      :encoding => "UTF-8",
+      :debug=>false,
+    }
+    OptionParser.new do |opts|
+      opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} filename [-i] [-s sep] [-n] [-d] [-h]'
+
+  Example:
+    $ echo -e "name,age\nfoo,20\nbar,22" | #{File::basename($0)} -n
+    {"name":"foo","age":"20"}
+    {"name":"bar","age":"22"}
+EOF
+      opts.separator ''
+      opts.on('-t', '--title json', 'Set the title header.') { |i|
+        ret[:title_json] = i
+      }
+      opts.on('-n', '--normal_mode', 'Please see above "Example:" section.') { |i|
+        ret[:normal_mode] = i
+      }
+      opts.on('-s', '--separator sep', 'Set the separator (default: ",").') { |i|
+        ret[:csv_sep] = i
+      }
+      opts.on('-e', '--encoding encoding', 'Set a encoding string (default: "' + ret[:encoding].to_s + '").') { |i|
+        ret[:encoding] = i
+      }
+      opts.on('-d', '--debug', 'Enable the debug mode.') { |i|
+        ret[:debug] = i
+      }
+      opts.on_tail('-h', '--help', 'Show this message') {
+        $stderr.puts opts
+        exit(1)
+      }
+      begin
+        opts.parse!(ARGV)
+        ret[:filename] = ARGV[0] if ARGV.length == 1
+      rescue
+        $stderr.puts opts
+        $stderr.puts
+        $stderr.puts "[error] #{$!}"
+        exit(1)
+      end
+    end
+    ret
+  end  
+
+  def pc(tl,vl,h)
+    t = tl.delete_at(0)
+    v = vl.delete_at(0)
+    if v != nil
+      if not h.empty? and h.kind_of?(Hash)
+        return h.merge({t => v})
+      else
+        return {t=>v}
+      end
+    end
+    if h.has_key?(t)
+      h[t] = pc(tl,vl,h[t])
+    else
+      h[t] = pc(tl,vl,{})
+    end
+    h
+  end
+
+  def merger(h, v)
+    v.kind_of?(Hash) and v.keys.each do|t|
+      if h.has_key?(t)
+        if v[t].kind_of?(Hash)
+          merger(h[t],v[t])
+        else
+          if h[t].kind_of?(Array)
+            if h[t].index(v[t]) == nil
+              h[t] << v[t]
+            end
+          else
+            if v[t] == h[t]
+              h[t] = [h[t]]
+            else
+              h[t] = [h[t],v[t]]
+            end
+          end
+        end
+      else
+        h[t] = v[t]
+      end
+    end
+    if not h.kind_of?(Hash) and not v.kind_of?(Hash)
+      h = [h,v] if h != v
+      h = [v] if h == v
+    end
+    h
+  end
+
+  ## please remember to call dup for tlist.
+  def parse_csv_line(tlist,vlist,h={})
+    return h if tlist.empty?
+    t = tlist.delete_at(0)
+    v = vlist.delete_at(0)
+    if v == nil
+      tmp = {}
+      v = pc(tlist, vlist, tmp)
+    end
+    
+    if h[t] == {} or h[t] == nil
+      if v.kind_of?(String) and v[0] == '[' or v[0] == '{'
+        begin
+          h[t] = eval(v)
+        rescue
+          h[t] = v
+        end
+      else
+        h[t] = v
+      end
+    else
+      h[t] = merger(h[t], v)
+    end
+    parse_csv_line(tlist,vlist,h) 
+    h
+  end
+end
+
+if $0 == __FILE__
+  @basedir = File::dirname($0)
+  $:.unshift File::join([@basedir,"..","..","lib"])
+  require 'yalt'
+  include YALTools::CmdLine
+  
+  require 'json'
+  include YaCsv2Json
+
+  @opts = option_parser
+  msg = {"debug" => {"opts" => @opts }} and  $stderr.puts msg.to_json if @opts[:debug]
+
+  begin
+    @title = nil
+    h = {}
+    load_line_as_csv(@opts[:filename], @opts[:csv_sep]) do |row|
+      f = row.fields
+
+      if @title == nil
+        if @opts[:title_json].empty?
+          @title = row.headers
+          @title_len = @title.length
+        else
+          @title = JSON.parse(@opts[:title_json])
+          @title_len = @title.length
+        end
+      end
+      if @title_len == f.length
+        if @opts[:normal_mode]
+          f.map! do |i|
+            if i == nil
+              i = ""
+            else
+              i
+            end
+          end
+        end
+
+        parse_csv_line(@title.dup, f.dup, h)
+        if @opts[:normal_mode]
+          puts h.to_json
+          h = {}
+        end
+      else
+        $stderr.puts "[error] each row must be the same column number of @title."
+      end
+    end
+    puts h.to_json if not @opts[:normal_mode]
+  rescue
+    $stderr.puts $! if @opts[:debug]
+  ensure
+    exit
+  end
+end

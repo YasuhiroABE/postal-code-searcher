@@ -1,0 +1,83 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#
+if $0 == __FILE__
+  
+  @basedir = File.dirname($0)
+  $:.unshift File.join([@basedir, "..", "..", "lib"])
+  require 'yalt'
+  include YALTools::CmdLine
+  
+  require 'optparse'
+  def option_parser
+    ret = {
+      :dbname => "",
+      :couch_label=>"",
+      :couch_conf=>"",
+      :debug=>false,
+    }
+    require 'socket'
+    OptionParser.new do |opts|
+      opts.banner = <<-EOF
+  Usage: #{File::basename($0)} dbname [-d]
+
+#{File::basename($0)} is a tool to create database to the couchdb server.
+The server and authentication information is referred to 
+
+  Example: #{File::basename($0)} -d example
+
+The database named "example" is created to the couchdb server which is specified by the default YAML conf label, "default.admin".
+
+EOF
+      opts.separator ''
+      opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+        ret[:couch_conf] = c
+      }    
+      opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+        ret[:couch_label] = l
+      }
+      opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+        ret[:debug] = g
+      }
+      opts.on_tail('-h', '--help', 'Show this message') {
+        $stderr.puts opts
+        exit
+      }
+      begin
+        opts.parse!(ARGV)
+        ret[:dbname] = ARGV[0] if ARGV.length == 1
+      rescue
+        $stderr.puts opts
+        $stderr.puts
+        $stderr.puts "[error] #{$!}"
+        exit
+      end
+      if ret[:dbname] == ""
+        $stderr.puts opts
+        exit
+      end
+
+      if ret[:couch_label] == ""
+        ret[:couch_label] = get_default_yaml_label()
+      end
+      if ret[:couch_conf] == ""
+        ret[:couch_conf] = get_default_yaml_conf(@basedir)
+      end
+    end
+    return ret
+  end
+  
+  @opts = option_parser
+  msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+  @couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+  
+  uri = format("/%s", @opts[:dbname])
+  res = @couch.put(uri,{})
+  if res.kind_of?(Net::HTTPSuccess)
+    puts res.body
+  else
+    msg = {"error" => "undefined", "reason" => "unknown"}
+    puts msg.to_json
+  end
+end

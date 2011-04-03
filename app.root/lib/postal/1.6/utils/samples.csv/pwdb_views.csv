@@ -1,0 +1,10 @@
+"views","uid","map","views","uid","reduce","views","name","map","views","name","reduce"
+,,"function(doc) {
+  if(doc.uid) {
+    emit(doc.uid, 1);
+  }
+}",,,"_count",,,"function(doc) {
+  if(doc.name) {
+    emit(doc.name, 1);
+  }
+}",,,"_count"

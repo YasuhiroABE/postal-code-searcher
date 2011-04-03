@@ -1,0 +1,9 @@
+
+div.searchbox {
+    display: none;
+}
+div.termofccl a:link:after, div.termofccl a:visited:after,
+div.validations a:link:after, div.validations a:visited:after{
+    text-decoration: none;
+    content: "";
+}

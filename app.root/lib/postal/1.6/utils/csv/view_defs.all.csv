@@ -1,0 +1,118 @@
+"_id","language","views","old_code_prefix","map","views","old_code_prefix","reduce","views","code","map","views","code","reduce","views","code_prefix","map","views","code_prefix","reduce","views","code_suffix","map","views","code_suffix","reduce","views","pref","map","views","pref","reduce","views","city","map","views","city","reduce","views","street","map","views","street","reduce","views","pref_kana","map","views","pref_kana","reduce","views","city_kana","map","views","city_kana","reduce","views","street_kana","map","views","street_kana","reduce","views","code_prefix_street","map","views","code_prefix_street","reduce","views","code_prefix_city","map","views","code_prefix_city","reduce","views","pref_code_prefix","map","views","pref_code_prefix","reduce","views","code_prefix_street_kana","map","views","code_prefix_street_kana","reduce","views","code_prefix_city_kana","map","views","code_prefix_city_kana","reduce","views","pref_kana_code_prefix","map","views","pref_kana_code_prefix","reduce","views","pref_kana_street_kana","map","views","pref_kana_street_kana","reduce","views","pref_kana_city_kana","map","views","pref_kana_city_kana","reduce","views","city_kana_street_kana","map","views","city_kana_street_kana","reduce","views","pref_street","map","views","pref_street","reduce","views","pref_city","map","views","pref_city","reduce","views","city_street","map","views","city_street","reduce","views","city_street_kana","map","views","city_street_kana","reduce","views","city_kana_street","map","views","city_kana_street","reduce","views","pref_city_kana","map","views","pref_city_kana","reduce","views","pref_street_kana","map","views","pref_street_kana","reduce","views","pref_kana_street","map","views","pref_kana_street","reduce","views","pref_city_street","map","views","pref_city_street","reduce","views","pref_kana_city_kana_street_kana","map","views","pref_kana_city_kana_street_kana","reduce"
+"_design/all","javascript",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.ocode, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.code, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.codep, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.codes, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.p, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.c, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.s, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.pk, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.ck, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit(doc.sk, null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.codep,doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.codep,doc.c], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.codep], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.codep,doc.sk], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.codep,doc.ck], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.pk, doc.codep], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.pk, doc.sk], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.pk, doc.ck], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.ck, doc.sk], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.c], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.c, doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.c, doc.sk], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.ck, doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.ck], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.sk], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.pk, doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.p, doc.c, doc.s], null);
+  }
+}",,,"_count",,,"function(doc) {
+  if (doc.type && doc.type == ""pcode"") {
+    emit([doc.pk, doc.ck, doc.sk], null);
+  }
+}",,,"_count"

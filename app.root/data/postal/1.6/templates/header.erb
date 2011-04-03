@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+    "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+  <head>
+    <!-- Blueprint CSS files -->
+    <link rel="stylesheet" href="/postal/css/blueprint/screen.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="/postal/css/blueprint/print.css" type="text/css" media="print" />
+    <!--[if IE]><link rel="stylesheet" href="/postal/css/blueprint/ie.css" type="text/css" media="screen, projection" /><![endif]-->
+    <!-- Local CSS files -->
+    <link rel="stylesheet" href="/postal/css/common.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="/postal/css/common.print.css" type="text/css" media="print" />
+    <link rel="stylesheet" href="/postal/css/postal.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="/postal/css/postal.print.css" type="text/css" media="print" />
+    <style type="text/css">
+    </style>
+    <!-- JavaScript files -->
+    <script src="/postal/js/jquery.min.js" type="text/javascript"></script>
+    <script src="/postal/js/flexbox/js/jquery.flexbox.1.5.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/postal/js/flexbox/css/jquery.flexbox.css" type="text/css" media="screen, projection" />
+    
+    <!-- JavaScript -->
+    <script type="text/javascript"><!--
+    jQuery(document).ready(function($){
+       $("div#pref_js").flexbox("pref.fcgi", { 
+         resultTemplate: "{name}",
+         initialValue: $("input#pref").val(),
+         hiddenValue: "name",
+	 onSelect: function() {
+           $("input#pref").val($(this).val());
+         },
+         width: 176,
+         queryDelay: 80,
+         noResultsText: "<%= _("Not Found") %>",
+         autoCompleteFirstMatch: false,
+         highlightMatchesRegExModifier: "i"
+       });
+       $("div#city_js").flexbox("city.fcgi", { 
+         resultTemplate: "{name}",
+         initialValue: $("input#city").val(),
+         hiddenValue: "name",
+	 onSelect: function() {
+           $("input#city").val($(this).val());
+         },
+         width: 164,
+         queryDelay: 80,
+         noResultsText: "<%= _("Not Found") %>",
+         autoCompleteFirstMatch: false,
+         highlightMatchesRegExModifier: "i",
+         queryKey: 'input#pref' /* ,
+         maxCacheBytes: 0 */ /* test for cache modification */
+       });
+       $("div#street_js").flexbox("street.fcgi", { 
+         resultTemplate: "{name}",
+         initialValue: $("input#street").val(),
+         hiddenValue: "name",
+	 onSelect: function() {
+           $("input#street").val($(this).val());
+         },
+         width: 228,
+         queryDelay: 80,
+         noResultsText: "<%= _("Not Found") %>",
+         autoCompleteFirstMatch: false,
+         highlightMatchesRegExModifier: "i",
+         queryKey: 'input#pref',
+         queryKey2: 'input#city' /* ,
+         maxCacheBytes: 0 */ /* test for cache modification */
+       });
+       $("input#pref").attr("readonly","readonly").css("background-color", "#dfdfdf").hide();
+       $("input#city").attr("readonly","readonly").css("background-color", "#dfdfdf").hide();
+       $("input#street").attr("readonly","readonly").css("background-color", "#dfdfdf").hide();
+    });
+     --></script>
+    <!-- page information -->
+    <link rel="dc:creator" resource="http://www.yasundial.org/info/foaf.rdf#me" title="<%= _("Author by FOAF") %>" />
+    <link rel="license" href="http://creativecommons.org/licenses/by/2.1/jp/" title="<%= _("license") %>" />
+    <title property="dc:title"><%= _("Lookup Postal Code in Japan using CouchDB") %> | <%= _("Ver. 1.6")  %></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  </head>
+  
+  <body>
+    <div class="container">

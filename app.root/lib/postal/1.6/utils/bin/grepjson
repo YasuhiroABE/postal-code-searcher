@@ -1,0 +1,99 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File::dirname($0)
+$:.unshift File::join([@basedir,"..","..","lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :outfile => "-",
+    :json_list => [],
+    :use_regexp => false,
+    :ignore_case => false,
+    :invert => false,
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} '["key1","value1"]' '["key2","value2"]' ... [-r] [-i] [-v] [-f file] [-o outfile] [-d] [-h]
+
+#{File::basename($0)} is a tool to select lines by each key and value pair.
+Each input line must have a complete JSON expression (evaluated by JSON.parse('["key1","value1"]'))
+
+  Example: 
+    $ #{File::basename($0)} '["doctype","log"]' '["name","John"]'
+    {"id":"..","_rev":"..","doctype":"log",...,"name":"John"}
+
+If the '["doctype","log"]' was specified, then the document having {"doctype":"log"} entry will be output.
+If '["doctype",""]' and '-r' option are specified, then all document having "doctype" will be output.
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set input filename or '-' (default: '-').") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-' (default: '-').") { |f|
+      ret[:outfile] = f
+    }
+    opts.on('-r', '--use_regexp', 'If enabled and value is string, then use Regexp.compile(value).') { |r|
+      ret[:use_regexp] = r
+    }
+    opts.on('-i', '--ignore_case', 'If enabled, ignore the case sistinctions in the value.') { |i|
+      ret[:ignore_case] = i
+    }
+    opts.on('-v', '--invert_mode', 'Enable the invert-match mode as same as grep.') { |i|
+      ret[:invert] = i
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode.') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ARGV.map do |i|
+        begin
+          ret[:json_list] << JSON.parse(i)
+        end
+      end
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    
+    if ARGV.length == 0
+      $stderr.puts opts
+      exit(1)
+    end
+  end
+  ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+## let's start
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    ret = YALTools::ProcJson::grep_json(json, @opts[:json_list], @opts[:use_regexp], @opts[:ignore_case])
+    
+    ret = ! ret if @opts[:invert]
+    ## show results
+    save_data(json.to_json, @opts[:outfile]) if ret
+  end
+ensure
+  $stderr.puts $! if @opts[:debug]
+  exit
+end
+

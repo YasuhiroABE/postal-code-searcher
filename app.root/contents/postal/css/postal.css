@@ -1,0 +1,55 @@
+body {
+  background: #ffffff;
+}
+/** Logo **/
+.logo a , .logo a:visited , .logo a:link , .logo a:hover , .logo a:active {
+  color: #000000;
+  text-decoration: none;
+}
+/**  table settings **/
+table {
+  border-collapse: collapse;
+  border: 2px solid black;
+}
+table th {
+  text-align: center;
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+table td {
+  border: 1px dotted #666666;
+}
+table td.center {
+  text-align: center;
+}
+table td.p_num {
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+}
+table input.input-kana {
+  background-repeat: no-repeat;
+}
+table input.input-kanji {
+  background-repeat: no-repeat;
+}
+
+div.link-navi ul li {
+  display: inline-block;
+  margin: 0px;
+  padding: 0px;
+  width: 64px;
+  text-align: center;
+  border: 1px solid black;
+}
+div.link-navi ul li.plain {
+  border: none;
+  width: 48px;
+}
+
+div.system_usage span#system_usage_open, div.system_usage span#system_usage_close {
+  text-decoration: underline;
+  background: #ffffff;
+}
+span#system_usage_open, span#system_usage_close {
+  color: #2b48bc;
+}

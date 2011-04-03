@@ -1,0 +1,92 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..", "lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :uri => "",
+    :show_head => false,
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} uri [--head] [-y yaml_conf] [-x yaml_label] [-d] [-h]
+
+  Example: #{File::basename($0)} /example/_security
+EOF
+    opts.separator ''
+    opts.on('--head', "Send HEAD request") { |i|
+      ret[:show_head] = i
+    }
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |i|
+      ret[:couch_conf] = i
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |i|
+      ret[:couch_label] = i
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |i|
+      ret[:debug] = i
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:uri] = ARGV[0] if ARGV.length == 1
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:uri] == ""
+      $stderr.puts "[error] need to set a single uri"
+      $stderr.puts opts
+      exit(1)
+    end
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+
+## let's start
+begin
+  if @opts[:show_head]
+    json = YALTools::CmdLine::get_header(@couch, @opts[:uri])
+    puts json.to_json
+  else
+    json = @couch.get(@opts[:uri])
+    if json.kind_of?(Hash)
+      puts json.to_json
+    else
+      puts json
+    end
+  end
+rescue
+  msg = {"error" => "undefined", "reason" => "unknown"}
+  $stderr.puts msg.to_json
+  $stderr.puts $! if @opts[:debug]
+end
+
+
+

@@ -1,0 +1,86 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File::dirname($0)
+$:.unshift File::join([@basedir,"..","..","lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :outfile => "-",
+    :rs_list => [], ## collection of a ruby script
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} "ruby expression" ... [-f file] [-o outfile] [-d] [-h]
+
+Each ruby expression can be access to the json string using the 'json' internal variable.
+
+  Example:
+    $ echo '{"a":"b","c":"d"}' | #{File::basename($0)} "json.delete('c')"
+    {"a":"b"}
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set input filename or '-' (default: '-').") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-' (default: '-').") { |f|
+      ret[:outfile] = f
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode.') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ARGV.each do |i|
+        ret[:rs_list] << i
+      end
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    
+    if ARGV.length == 0
+      $stderr.puts opts
+      exit(1)
+    end
+  end
+  ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+## let's start
+
+require 'base64'
+
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    
+    @opts[:rs_list].each do |rs|
+      eval(rs, binding)
+    end
+    
+    ## show results
+    save_data(json.to_json, @opts[:outfile])
+  end
+ensure
+  $stderr.puts $! if @opts[:debug]
+  exit
+end
+

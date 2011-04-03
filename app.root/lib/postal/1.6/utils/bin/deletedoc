@@ -1,0 +1,83 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File.dirname($0)
+$:.unshift File.join([@basedir, "..", "..", "lib"])
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :uri => "",
+    :couch_label=>"",
+    :couch_conf=>"",
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} uri [-y yaml_conf] [-x yaml_label] [-d] [-h]
+
+  Example: #{File::basename($0)} /example
+
+Delete "example" db.
+EOF
+    opts.separator ''
+    opts.on('-y', '--yaml_conf filename', "Set yaml conf file") { |c|
+      ret[:couch_conf] = c
+    }
+    opts.on('-x', '--yml_label label', "Set label name in the yaml conf file (default: default.user)") { |l|
+      ret[:couch_label] = l
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |g|
+      ret[:debug] = g
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:uri] = ARGV[0] if ARGV.length == 1
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:uri] == ""
+      $stderr.puts "[error] need to set a single uri"
+      $stderr.puts opts
+      exit(1)
+    end
+    if ret[:couch_label] == ""
+      ret[:couch_label] = get_default_yaml_label()
+    end
+    if ret[:couch_conf] == ""
+      ret[:couch_conf] = get_default_yaml_conf(@basedir)
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+msg = {"debug"=>@opts} and $stderr.puts msg.to_json if @opts[:debug]
+
+@couch = getCouch(@opts[:couch_conf], @opts[:couch_label], @opts[:debug])
+
+## let's start
+begin
+  res = @couch.delete(@opts[:uri])
+  if res.kind_of?(Net::HTTPSuccess)
+    puts res.body
+  else
+    puts res.body
+  end
+rescue
+  msg = {"error" => "undefined", "reason" => "unknown"}
+  $stderr.puts msg.to_json
+  $stderr.puts $! if @opts[:debug]
+end
+

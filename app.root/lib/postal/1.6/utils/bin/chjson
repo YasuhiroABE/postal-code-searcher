@@ -1,0 +1,92 @@
+#!/usr/bin/env /usr/local/bin/ruby
+# -*- coding: utf-8 -*-
+#  Copyright (C) 2010,2011 Yasuhiro ABE <yasu@yasundial.org>
+
+@basedir = File::dirname($0)
+$:.unshift File::join([@basedir,"..","..","lib"])
+require 'deep_merge'
+require 'yalt'
+include YALTools::CmdLine
+
+require 'optparse'
+def option_parser
+  ret = {
+    :filename => "-",
+    :outfile => "-",
+    :json_list => [],
+    :eval => false,
+    :debug=>false,
+  }
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+
+  Usage: #{File::basename($0)} '[json_array]' ... [-f file] [-d]
+
+#{File::basename($0)} adds or mofifies top-level key/value pair given by '[json_array]'.
+'[json_array]' will be parsed by JSON.parse('[json_array]').
+The given json_array, '[k1,k2,v]', will be expanded to {k1:{k2:v}}.
+
+  Example: 
+    $ echo '{"name":"foo","age":18}' | #{File::basename($0)} '["age",22]' '["over20", true]'
+    {"name":"foo","age":22,"over20":true}
+EOF
+    opts.separator ''
+    opts.on('-f', '--file filename', "Set an input filename or '-'.") { |f|
+      ret[:filename] = f if FileTest.exist?(f)
+      ret[:filename] = f if f == "-"
+    }
+    opts.on('-o', '--outfile outfile', "Set output filename or '-'.") { |f|
+      ret[:outfile] = f
+    }
+    opts.on('-d', '--debug', 'Enable the debug mode') { |d|
+      ret[:debug] = d
+    }
+    opts.on_tail('-h', '--help', 'Show this message') {
+      $stderr.puts opts
+      exit(1)
+    }
+    begin
+      opts.parse!(ARGV)
+      ret[:json_list] = ARGV
+    rescue
+      $stderr.puts opts
+      $stderr.puts
+      $stderr.puts "[error] #{$!}"
+      exit(1)
+    end
+    if ret[:json_list] == ""
+      $stderr.puts opts
+      exit(1)
+    end
+  end
+  ret
+end
+
+def a2h(list)
+  ret = nil
+  list.reverse_each do |i|
+    if ret == nil
+      ret = i
+    else
+      ret = { i => ret }
+    end
+  end
+  return ret
+end
+
+@opts = option_parser
+
+## let's start  
+begin
+  load_line(@opts[:filename]) do |line|
+    json = line_to_json(line)
+    @opts[:json_list].each do |list|
+      json_list = line_to_json(list)
+      json.deeper_merge!(a2h(json_list))
+    end
+    save_data(json.to_json, @opts[:outfile])
+  end
+ensure
+  $stderr.puts $! if @opts[:debug]
+  exit
+end

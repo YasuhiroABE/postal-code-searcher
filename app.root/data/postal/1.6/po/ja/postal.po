@@ -1,0 +1,111 @@
+#
+# Copyright (C) 2010,2011 YasuhiroABE <yasu@yasundial.org>
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: postal 1.6.0\n"
+"POT-Creation-Date: 2011-03-27 05:25-0700\n"
+"PO-Revision-Date: 2011-03-27 05:24-0700\n"
+"Last-Translator: YasuhiroABE <yasu@yasundial.org>\n"
+"Language-Team: ja <yasu@yasundial.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: templates/search.erb:29
+msgid "Postal Code Search"
+msgstr "郵便番号検索"
+
+#: templates/search.erb:34
+msgid "Input Search String"
+msgstr "検索項目の入力"
+
+#: templates/search.erb:34
+msgid "Reset all fields"
+msgstr "全入力項目のリセット"
+
+#: templates/search.erb:36
+msgid "Postal Code (seven digits)"
+msgstr "郵便番号(3-4桁)〒"
+
+#: templates/search.erb:41
+msgid "Old Postal Code (five digits)"
+msgstr "旧郵便番号(5桁)〒"
+
+#: templates/search.erb:44
+msgid "Rows on each page"
+msgstr "表示件数"
+
+#: templates/search.erb:49
+msgid "Kanji/Katakana Search"
+msgstr "漢字/カタカナ検索"
+
+#: templates/search.erb:50
+msgid "Pref. name"
+msgstr "都道府県名"
+
+#: templates/search.erb:55
+msgid "City name"
+msgstr "市区郡名"
+
+#: templates/search.erb:59
+msgid "Street name"
+msgstr "町村名、その他の地名"
+
+#: templates/search.erb:64
+msgid "Search"
+msgstr "検索"
+
+#: templates/search.erb:72
+msgid "Search Results"
+msgstr "検索結果"
+
+#: templates/search.erb:72
+msgid "Page Number"
+msgstr "ページ番号:"
+
+#: templates/search.erb:72
+msgid "Download by JSON"
+msgstr "JSON形式でのダウンロード"
+
+#: templates/search.erb:72
+msgid "Download results by JSON format"
+msgstr "表示結果をJSON形式でダウンロード"
+
+#: templates/search.erb:74 templates/search.erb:107
+msgid "No."
+msgstr "番号"
+
+#: templates/search.erb:75
+msgid "Postal Code"
+msgstr "郵便番号"
+
+#: templates/search.erb:76
+msgid "Pref."
+msgstr "都道府県"
+
+#: templates/search.erb:77
+msgid "City"
+msgstr "市区郡"
+
+#: templates/search.erb:78
+msgid "Street"
+msgstr "町村、その他の地名"
+
+#: templates/search.erb:79
+msgid "Others"
+msgstr "備考欄"
+
+#: templates/search.erb:102
+msgid "Total Results"
+msgstr "全件数"
+
+#: templates/search.erb:126
+msgid "Response Time"
+msgstr "処理時間"
+
+#: templates/search.erb:126
+msgid "sec"
+msgstr "秒"

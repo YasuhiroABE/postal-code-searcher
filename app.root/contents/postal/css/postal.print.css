@@ -1,0 +1,17 @@
+
+div.link-navi ul li {
+    display: inline-block;
+}
+
+div.link-navi ul li a:visited:after, div.link-navi ul li a:link:after, 
+div.link-navi ul li a:hover:after, div.link-navi ul li a:active:after {
+    content: "";
+}
+
+#download-json a:link:after, #download-json a:visited:after {
+    content: "";
+}
+div.access-check a:visited:after, div.access-check a:link:after, 
+div.access-check a:hover:after,   div.access-check a:active:after {
+    content: "";
+}
