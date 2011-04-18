@@ -29,13 +29,15 @@ In this section, it assumes that the installation directory is "/app".
 First, please unpack the archive file and make up the directory structure like as "/app/{lib,data,contents}".
 
     $ sudo mkdir /app
+    $ cd /app
     $ sudo tar xjf ~/postal-code-searcher.20110403.tar.bz2
     $ sudo mv postal-code-searcher/* .
 
 If the "ruby" command is installed other than /usr/local/bin/ruby,
 please execute the command, change\_ruby\_command\_name.sh, with the correct ruby filename.
 
-    $ /app/lib/postal/1.6/sbin/change_ruby_command_name.sh /usr/bin/ruby1.9.2
+    $ sudo /app/lib/postal/1.6/sbin/change_ruby_command_name.sh /usr/bin/ruby1.9.2
+    ## Instead of using "sudo", you can change file permissions.
 
 ### Setting up the account information to CouchDB
 There are two configuration files, /app/lib/postal/1.6/utils/conf/yalt.yaml and /app/data/postal/1.6/yalt.yaml.
